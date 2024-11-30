@@ -2,6 +2,7 @@ import concurrent
 import hashlib
 import json
 import logging
+import re
 import uuid
 import warnings
 from datetime import datetime
@@ -184,7 +185,9 @@ class Memory(MemoryBase):
             messages=[{"role": "user", "content": function_calling_prompt}],
             response_format={"type": "json_object"},
         )
-        new_memories_with_actions = json.loads(new_memories_with_actions)
+
+        parsed_response = parse_json_response(new_memories_with_actions)
+        new_memories_with_actions = json.loads(parsed_response)
 
         returned_memories = []
         try:
@@ -637,3 +640,10 @@ class Memory(MemoryBase):
 
     def chat(self, query):
         raise NotImplementedError("Chat function not implemented yet.")
+
+
+def parse_json_response(response):
+    search_result = re.search("(```json)((.*\n)+)(```)", response)
+    if search_result:
+        response = search_result.group(2).strip()
+    return response
